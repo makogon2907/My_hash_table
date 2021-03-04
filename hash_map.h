@@ -153,6 +153,7 @@ public:
         containers.assign(nsize, {end(), end()});
     }
 
+    // all variables 
 private:
     static const size_t default_size = 5;
     std::vector<Bucket> containers;
