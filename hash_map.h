@@ -28,14 +28,7 @@ public:
 
     HashMap(const std::initializer_list<Element>& ndata, Hash hasher = Hash()) : HashMap(ndata.begin(), ndata.end(), hasher) {}
 
-    HashMap(const HashMap& other) : hasher(other.hasher) {
-        if (this == &other)
-            return;
-        sz = other.sz;
-        containers.assign(other.containers.size(), {end(), end()});
-        for (const auto& el : other)
-            insert(el);
-    }
+    HashMap(const HashMap& other) : HashMap(other.begin(), other.end(), hasher) {}
 
     HashMap& operator=(const HashMap& other) {
         if (this == &other)
@@ -153,7 +146,7 @@ public:
         containers.assign(nsize, {end(), end()});
     }
 
-    // all variables 
+    // all variables
 private:
     static const size_t default_size = 5;
     std::vector<Bucket> containers;
