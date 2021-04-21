@@ -266,7 +266,5 @@ void run_all() {
 
 int main() {
     internal_tests::run_all();
-
-    std::cout << "kek" << std::endl;
     return 0;
 }
