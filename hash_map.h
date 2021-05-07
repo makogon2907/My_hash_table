@@ -6,12 +6,12 @@
 template <class KeyType, class ValueType, class Hash = std::hash<KeyType>>
 class HashMap {
 public:
-    using Element = typename std::pair<const KeyType, ValueType>;
-    using iterator = typename std::list<Element>::iterator;
-    using const_iterator = typename std::list<Element>::const_iterator;
-    using Bucket = std::pair<iterator, iterator>;
+    using element = typename std::pair<const KeyType, ValueType>;
+    using iterator = typename std::list<element>::iterator;
+    using const_iterator = typename std::list<element>::const_iterator;
+    using bucket = std::pair<iterator, iterator>;  // хранит итераторы на границы подотрезка элементов с одним хэшом, включительно
 
-    size_t myhash(const KeyType key) const {
+    size_t get_position(const KeyType key) const {
         return hasher(key) % containers.size();
     }
 
@@ -26,7 +26,7 @@ public:
             insert(*start++);
     }
 
-    HashMap(const std::initializer_list<Element>& ndata, Hash hasher = Hash()) : HashMap(ndata.begin(), ndata.end(), hasher) {}
+    HashMap(const std::initializer_list<element>& ndata, Hash hasher = Hash()) : HashMap(ndata.begin(), ndata.end(), hasher) {}
 
     HashMap(const HashMap& other) : HashMap(other.begin(), other.end(), hasher) {}
 
@@ -64,36 +64,48 @@ public:
         return elements.end();
     }
 
-    void insert(const Element& el, bool dorehash = true) {
-        if (find(el.first) != end())
+    void insert(const element& el) {
+        if (find(el.first) != end()) {
             return;
-        Bucket& cur_bucket = containers[myhash(el.first)];
-        cur_bucket.first = elements.insert(cur_bucket.first, el);
-        if (cur_bucket.second == end())
-            cur_bucket.second--;
+        }
+        bucket& current_bucket = containers[get_position(el.first)];
+
+        // вставляем вначало текущего "отрекзка"
+        current_bucket.first = elements.insert(current_bucket.first, el);
+
+        // если этот bucket появился впервые, то нужно сдвинуть указатель с end(),
+        //т.к. границы хранятся включительно
+        if (current_bucket.second == end()) {
+            current_bucket.second--;
+        }
         sz++;
-        if (dorehash)
-            rehash();
+        rehash();
     }
 
     void erase(const KeyType& key) {
-        iterator cur = find(key);
-        if (cur == end())
+        iterator iterator_to_erase = find(key);
+        if (iterator_to_erase == end())
             return;
-        Bucket& cur_bucket = containers[myhash(key)];
-        // if there is only one element in this bucket
-        if (cur_bucket.first == cur_bucket.second)
-            cur_bucket.first = cur_bucket.second = end();
-        else if (cur == cur_bucket.first)
+
+        bucket& cur_bucket = containers[get_position(key)];
+
+        if (cur_bucket.first == cur_bucket.second) {
+            // если остался только один элемент в корзинке, то указатели этой корзинки нужно сдвинуть в конец списка
+            cur_bucket.first = end();
+            cur_bucket.second = end();
+        } else if (iterator_to_erase == cur_bucket.first) {
+            // если удалился первый элемент, то сдвинуть начало подотрезка bucket-а
             cur_bucket.first++;
-        else if (cur == cur_bucket.second)
+        } else if (iterator_to_erase == cur_bucket.second) {
+            // eсли удалился последний, то тоже нужно сдвинуть границу
             cur_bucket.second--;
+        }
         sz--;
-        elements.erase(cur);
+        elements.erase(iterator_to_erase);
     }
 
     iterator find(const KeyType& key) {
-        Bucket bucket = containers[myhash(key)];
+        bucket bucket = containers[get_position(key)];
         if (bucket.first == end())
             return end();
         for (iterator it = bucket.first; it != std::next(bucket.second); ++it)
@@ -103,7 +115,7 @@ public:
     }
 
     const_iterator find(const KeyType& key) const {
-        Bucket bucket = containers[myhash(key)];
+        bucket bucket = containers[get_position(key)];
         if (bucket.first == end())
             return end();
         for (const_iterator it = bucket.first; it != std::next(bucket.second); ++it)
@@ -115,21 +127,21 @@ public:
     void rehash() {
         if (sz <= containers.size())
             return;
-        std::vector<Element> tmp;
-        tmp.reserve(sz);
+        std::vector<element> temporary_buffer;
+        temporary_buffer.reserve(sz);
         for (const auto& element : elements)
-            tmp.push_back(element);
+            temporary_buffer.push_back(element);
         clear(2 * containers.size());
-        for (const auto& element : tmp)
-            insert(element, false);
+        for (const auto& element : temporary_buffer)
+            insert(element);
     }
 
     ValueType& operator[](const KeyType& key) {
         iterator ptr = find(key);
         if (ptr != end())
-            return (*ptr).second;
+            return ptr->second;
         insert(std::make_pair(key, ValueType()));
-        return (*find(key)).second;  // if there will be rehash
+        return find(key)->second;  // if there will be rehash
     }
 
     const ValueType& at(const KeyType& key) const {
@@ -149,8 +161,8 @@ public:
     // all variables
 private:
     static const size_t default_size = 5;
-    std::vector<Bucket> containers;
-    std::list<Element> elements;
+    std::vector<bucket> containers;
+    std::list<element> elements;
     size_t sz = 0;
     Hash hasher;
 };
