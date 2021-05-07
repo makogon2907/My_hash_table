@@ -64,14 +64,14 @@ public:
         return elements.end();
     }
 
-    void insert(const element& el) {
-        if (find(el.first) != end()) {
+    void insert(const element& element_to_insert) {
+        if (find(element_to_insert.first) != end()) {
             return;
         }
-        bucket& current_bucket = containers[get_position(el.first)];
+        bucket& current_bucket = containers[get_position(element_to_insert.first)];
 
         // вставляем вначало текущего "отрекзка"
-        current_bucket.first = elements.insert(current_bucket.first, el);
+        current_bucket.first = elements.insert(current_bucket.first, element_to_insert);
 
         // если этот bucket появился впервые, то нужно сдвинуть указатель с end(),
         //т.к. границы хранятся включительно
