@@ -22,14 +22,15 @@ public:
     }
 
     HashMap(Hash hasher = Hash()) : hasher(hasher) {
-        buckets.assign(default_size, {end(), end()});
+        buckets.assign(kDefaultSize, {end(), end()});
     }
 
     template <typename Iter>
     HashMap(Iter start, Iter finish, Hash hasher = Hash()) : hasher(hasher) {
-        buckets.assign(default_size, {end(), end()});
-        while (start != finish)
+        buckets.assign(kDefaultSize, {end(), end()});
+        while (start != finish) {
             insert(*start++);
+        }
     }
 
     HashMap(const std::initializer_list<element>& ndata, Hash hasher = Hash()) : HashMap(ndata.begin(), ndata.end(), hasher) {}
@@ -37,12 +38,14 @@ public:
     HashMap(const HashMap& other) : HashMap(other.begin(), other.end(), hasher) {}
 
     HashMap& operator=(const HashMap& other) {
-        if (this == &other)
+        if (this == &other) {
             return *this;
+        }
         clear();
         hasher = other.hasher;
-        for (const auto& el : other)
+        for (const auto& el : other) {
             insert(el);
+        }
         return *this;
     }
 
@@ -156,10 +159,10 @@ public:
 
     ValueType& operator[](const KeyType& key) {
         iterator pointer = find(key);
-        if (pointer != end())
+        if (pointer != end()) {
             return pointer->second;
-        insert(std::make_pair(key, ValueType()));
-        return find(key)->second;  // if there will be rehash
+        }
+        return insert(std::make_pair(key, ValueType()))->second;
     }
 
     const ValueType& at(const KeyType& key) const {
@@ -170,7 +173,7 @@ public:
         return pointer->second;
     }
 
-    void clear(size_t nsize = default_size) {
+    void clear(size_t nsize = kDefaultSize) {
         sz = 0;
         elements.clear();
         buckets.assign(nsize, {end(), end()});
@@ -178,7 +181,7 @@ public:
 
     // all variables
 private:
-    static constexpr size_t default_size = 5;
+    static constexpr size_t kDefaultSize = 5;
     std::vector<bucket> buckets;
     std::list<element> elements;
     size_t sz = 0;
