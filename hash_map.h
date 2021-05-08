@@ -74,7 +74,7 @@ public:
         current_bucket.first = elements.insert(current_bucket.first, element_to_insert);
 
         // если этот bucket появился впервые, то нужно сдвинуть указатель с end(),
-        //т.к. границы хранятся включительно
+        // т.к. границы хранятся включительно
         if (current_bucket.second == end()) {
             current_bucket.second--;
         }
@@ -84,21 +84,21 @@ public:
 
     void erase(const KeyType& key) {
         iterator iterator_to_erase = find(key);
-        if (iterator_to_erase == end())
+        if (iterator_to_erase == end()) {
             return;
+        }
+        bucket& current_bucket = containers[get_position(key)];
 
-        bucket& cur_bucket = containers[get_position(key)];
-
-        if (cur_bucket.first == cur_bucket.second) {
+        if (current_bucket.first == current_bucket.second) {
             // если остался только один элемент в корзинке, то указатели этой корзинки нужно сдвинуть в конец списка
-            cur_bucket.first = end();
-            cur_bucket.second = end();
-        } else if (iterator_to_erase == cur_bucket.first) {
+            current_bucket.first = end();
+            current_bucket.second = end();
+        } else if (iterator_to_erase == current_bucket.first) {
             // если удалился первый элемент, то сдвинуть начало подотрезка bucket-а
-            cur_bucket.first++;
-        } else if (iterator_to_erase == cur_bucket.second) {
+            current_bucket.first++;
+        } else if (iterator_to_erase == current_bucket.second) {
             // eсли удалился последний, то тоже нужно сдвинуть границу
-            cur_bucket.second--;
+            current_bucket.second--;
         }
         sz--;
         elements.erase(iterator_to_erase);
