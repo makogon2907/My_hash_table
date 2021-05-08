@@ -18,16 +18,16 @@ private:
 
 public:
     size_t get_position(const KeyType key) const {
-        return hasher(key) % containers.size();
+        return hasher(key) % buckets.size();
     }
 
     HashMap(Hash hasher = Hash()) : hasher(hasher) {
-        containers.assign(default_size, {end(), end()});
+        buckets.assign(default_size, {end(), end()});
     }
 
     template <typename Iter>
     HashMap(Iter start, Iter finish, Hash hasher = Hash()) : hasher(hasher) {
-        containers.assign(default_size, {end(), end()});
+        buckets.assign(default_size, {end(), end()});
         while (start != finish)
             insert(*start++);
     }
@@ -74,7 +74,7 @@ public:
         if (find(element_to_insert.first) != end()) {
             return;
         }
-        bucket& current_bucket = containers[get_position(element_to_insert.first)];
+        bucket& current_bucket = buckets[get_position(element_to_insert.first)];
 
         // вставляем вначало текущего "отрекзка"
         current_bucket.first = elements.insert(current_bucket.first, element_to_insert);
@@ -93,7 +93,7 @@ public:
         if (iterator_to_erase == end()) {
             return;
         }
-        bucket& current_bucket = containers[get_position(key)];
+        bucket& current_bucket = buckets[get_position(key)];
 
         if (current_bucket.first == current_bucket.second) {
             // если остался только один элемент в корзинке, то указатели этой корзинки нужно сдвинуть в конец списка
@@ -111,7 +111,7 @@ public:
     }
 
     iterator find(const KeyType& key) {
-        bucket current_bucket = containers[get_position(key)];
+        bucket current_bucket = buckets[get_position(key)];
         if (current_bucket.first == end())
             return end();
         for (iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it)
@@ -121,7 +121,7 @@ public:
     }
 
     const_iterator find(const KeyType& key) const {
-        bucket current_bucket = containers[get_position(key)];
+        bucket current_bucket = buckets[get_position(key)];
         if (current_bucket.first == end())
             return end();
         for (const_iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it)
@@ -131,13 +131,13 @@ public:
     }
 
     void rehash() {
-        if (sz <= containers.size())
+        if (sz <= buckets.size())
             return;
         std::vector<element> temporary_buffer;
         temporary_buffer.reserve(sz);
         for (const auto& element : elements)
             temporary_buffer.push_back(element);
-        clear(2 * containers.size());
+        clear(2 * buckets.size());
         for (const auto& element : temporary_buffer)
             insert(element);
     }
@@ -161,13 +161,13 @@ public:
     void clear(size_t nsize = default_size) {
         sz = 0;
         elements.clear();
-        containers.assign(nsize, {end(), end()});
+        buckets.assign(nsize, {end(), end()});
     }
 
     // all variables
 private:
-    static const size_t default_size = 5;
-    std::vector<bucket> containers;
+    static constexpr size_t default_size = 5;
+    std::vector<bucket> buckets;
     std::list<element> elements;
     size_t sz = 0;
     Hash hasher;
