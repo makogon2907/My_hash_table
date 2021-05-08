@@ -70,13 +70,15 @@ public:
         return elements.end();
     }
 
-    void insert(const element& element_to_insert) {
-        if (find(element_to_insert.first) != end()) {
-            return;
+    iterator insert(const element& element_to_insert) {
+        iterator element_pointer = find(element_to_insert.first);
+        if (element_pointer != end()) {
+            return element_pointer;
         }
+
         bucket& current_bucket = buckets[get_position(element_to_insert.first)];
 
-        // вставляем вначало текущего "отрекзка"
+        // вставляем вначало текущего "отрезка"
         current_bucket.first = elements.insert(current_bucket.first, element_to_insert);
 
         // если этот bucket появился впервые, то нужно сдвинуть указатель с end(),
@@ -86,6 +88,7 @@ public:
         }
         sz++;
         rehash();
+        return find(element_to_insert.first);
     }
 
     void erase(const KeyType& key) {
@@ -112,34 +115,43 @@ public:
 
     iterator find(const KeyType& key) {
         bucket current_bucket = buckets[get_position(key)];
-        if (current_bucket.first == end())
+        if (current_bucket.first == end()) {
             return end();
-        for (iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it)
-            if (it->first == key)
+        }
+        for (iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it) {
+            if (it->first == key) {
                 return it;
+            }
+        }
         return end();
     }
 
     const_iterator find(const KeyType& key) const {
         bucket current_bucket = buckets[get_position(key)];
-        if (current_bucket.first == end())
+        if (current_bucket.first == end()) {
             return end();
-        for (const_iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it)
-            if (it->first == key)
+        }
+        for (const_iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it) {
+            if (it->first == key) {
                 return it;
+            }
+        }
         return end();
     }
 
     void rehash() {
-        if (sz <= buckets.size())
+        if (sz <= buckets.size()) {
             return;
+        }
         std::vector<element> temporary_buffer;
         temporary_buffer.reserve(sz);
-        for (const auto& element : elements)
+        for (const auto& element : elements) {
             temporary_buffer.push_back(element);
+        }
         clear(2 * buckets.size());
-        for (const auto& element : temporary_buffer)
+        for (const auto& element : temporary_buffer) {
             insert(element);
+        }
     }
 
     ValueType& operator[](const KeyType& key) {
