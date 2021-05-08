@@ -4,13 +4,19 @@
 #include <vector>
 
 template <class KeyType, class ValueType, class Hash = std::hash<KeyType>>
+
 class HashMap {
-public:
+private:
     using element = typename std::pair<const KeyType, ValueType>;
+
+public:
     using iterator = typename std::list<element>::iterator;
     using const_iterator = typename std::list<element>::const_iterator;
+
+private:
     using bucket = std::pair<iterator, iterator>;  // хранит итераторы на границы подотрезка элементов с одним хэшом, включительно
 
+public:
     size_t get_position(const KeyType key) const {
         return hasher(key) % containers.size();
     }
