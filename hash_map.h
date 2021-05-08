@@ -105,20 +105,20 @@ public:
     }
 
     iterator find(const KeyType& key) {
-        bucket bucket = containers[get_position(key)];
-        if (bucket.first == end())
+        bucket current_bucket = containers[get_position(key)];
+        if (current_bucket.first == end())
             return end();
-        for (iterator it = bucket.first; it != std::next(bucket.second); ++it)
+        for (iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it)
             if ((*it).first == key)
                 return it;
         return end();
     }
 
     const_iterator find(const KeyType& key) const {
-        bucket bucket = containers[get_position(key)];
-        if (bucket.first == end())
+        bucket current_bucket = containers[get_position(key)];
+        if (current_bucket.first == end())
             return end();
-        for (const_iterator it = bucket.first; it != std::next(bucket.second); ++it)
+        for (const_iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it)
             if ((*it).first == key)
                 return it;
         return end();
@@ -137,19 +137,19 @@ public:
     }
 
     ValueType& operator[](const KeyType& key) {
-        iterator ptr = find(key);
-        if (ptr != end())
-            return ptr->second;
+        iterator pointer = find(key);
+        if (pointer != end())
+            return pointer->second;
         insert(std::make_pair(key, ValueType()));
         return find(key)->second;  // if there will be rehash
     }
 
     const ValueType& at(const KeyType& key) const {
-        const_iterator ptr = find(key);
-        if (ptr == end()) {
+        const_iterator pointer = find(key);
+        if (pointer == end()) {
             throw std::out_of_range("there is no such element in HashMap");
         }
-        return (*ptr).second;
+        return pointer->second;
     }
 
     void clear(size_t nsize = default_size) {
