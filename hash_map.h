@@ -109,7 +109,7 @@ public:
         if (current_bucket.first == end())
             return end();
         for (iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it)
-            if ((*it).first == key)
+            if (it->first == key)
                 return it;
         return end();
     }
@@ -119,7 +119,7 @@ public:
         if (current_bucket.first == end())
             return end();
         for (const_iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it)
-            if ((*it).first == key)
+            if (it->first == key)
                 return it;
         return end();
     }
