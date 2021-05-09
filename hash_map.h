@@ -157,7 +157,6 @@ private:
         sz++;
     }
 
-private:
     void produce_rehash(size_t nsize) {
         std::list<element> moved_elements;
         sz = 0;
