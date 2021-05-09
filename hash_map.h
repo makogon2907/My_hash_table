@@ -125,7 +125,7 @@ private:
         }
         int distance = 0;
         auto bucket_end = std::next(current_bucket.second);
-        for (const_iterator it = current_bucket.first; it != bucket_end; ++it, distance++) {
+        for (const_iterator it = current_bucket.first; it != bucket_end; ++it, ++distance) {
             if (it->first == key) {
                 return distance;
             }
@@ -157,14 +157,11 @@ private:
         sz++;
     }
 
-public:
-    void rehash() {
-        if (sz <= buckets.size()) {
-            return;
-        }
+private:
+    void produce_rehash(size_t nsize) {
         std::list<element> moved_elements;
         sz = 0;
-        buckets.assign(2 * buckets.size(), {moved_elements.end(), moved_elements.end()});
+        buckets.assign(nsize, {moved_elements.end(), moved_elements.end()});
         for (element& current_element : elements) {
             copy_insert(current_element, moved_elements);
         }
@@ -177,6 +174,15 @@ public:
             if (segment_pointers.second == moved_elements.end()) {
                 segment_pointers.second = elements.end();
             }
+        }
+    }
+
+public:
+    void rehash() {
+        if (sz > buckets.size()) {
+            produce_rehash(kIncreaseFactor * buckets.size());
+        } else if (2 * sz < buckets.size()) {
+            produce_rehash(kDecreaseFactor * buckets.size());
         }
     }
 
@@ -204,6 +210,9 @@ public:
 
     // all variables
 private:
+    static constexpr double kIncreaseFactor = 2;
+    static constexpr double kDecreaseFactor = 0.7;
+
     static constexpr size_t kDefaultSize = 5;
     std::vector<bucket> buckets;
     std::list<element> elements;
