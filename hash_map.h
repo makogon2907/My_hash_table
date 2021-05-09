@@ -35,7 +35,7 @@ public:
 
     HashMap(const std::initializer_list<element>& ndata, Hash hasher = Hash()) : HashMap(ndata.begin(), ndata.end(), hasher) {}
 
-    HashMap(const HashMap& other) : HashMap(other.begin(), other.end(), hasher) {}
+    HashMap(const HashMap& other) : HashMap(other.begin(), other.end(), other.hasher) {}
 
     HashMap& operator=(const HashMap& other) {
         if (this == &other) {
@@ -142,6 +142,22 @@ public:
         return end();
     }
 
+private:
+    void move_insert(element&& element_to_insert, const std::list<element>& place_to_insert) {
+        bucket& current_bucket = buckets[get_position(element_to_insert.first)];
+
+        // вставляем вначало текущего "отрезка"
+        current_bucket.first = place_to_insert.insert(current_bucket.first, element_to_insert);
+
+        // если этот bucket появился впервые, то нужно сдвинуть указатель с end(),
+        // т.к. границы хранятся включительно
+        if (current_bucket.second == end()) {
+            current_bucket.second--;
+        }
+        sz++;
+    }
+
+public:
     void rehash() {
         if (sz <= buckets.size()) {
             return;
