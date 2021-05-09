@@ -143,7 +143,7 @@ public:
     }
 
 private:
-    void move_insert(element&& element_to_insert, const std::list<element>& place_to_insert) {
+    void copy_insert(const element& element_to_insert, std::list<element>& place_to_insert) {
         bucket& current_bucket = buckets[get_position(element_to_insert.first)];
 
         // вставляем вначало текущего "отрезка"
@@ -151,7 +151,7 @@ private:
 
         // если этот bucket появился впервые, то нужно сдвинуть указатель с end(),
         // т.к. границы хранятся включительно
-        if (current_bucket.second == end()) {
+        if (current_bucket.second == place_to_insert.end()) {
             current_bucket.second--;
         }
         sz++;
@@ -162,14 +162,21 @@ public:
         if (sz <= buckets.size()) {
             return;
         }
-        std::vector<element> temporary_buffer;
-        temporary_buffer.reserve(sz);
-        for (const auto& element : elements) {
-            temporary_buffer.push_back(element);
+        std::list<element> moved_elements;
+        sz = 0;
+        buckets.assign(2 * buckets.size(), {moved_elements.end(), moved_elements.end()});
+        for (element& current_element : elements) {
+            copy_insert(current_element, moved_elements);
         }
-        clear(2 * buckets.size());
-        for (const auto& element : temporary_buffer) {
-            insert(element);
+        swap(elements, moved_elements);
+        // потому что при list::swap нет гарантий на end(), а все остальные итераторы сохранятся
+        for (auto& segment_pointers : buckets) {
+            if (segment_pointers.first == moved_elements.end()) {
+                segment_pointers.first = elements.end();
+            }
+            if (segment_pointers.second == moved_elements.end()) {
+                segment_pointers.second = elements.end();
+            }
         }
     }
 
