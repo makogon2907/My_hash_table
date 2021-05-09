@@ -1,6 +1,7 @@
 #include <initializer_list>
 #include <list>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 template <class KeyType, class ValueType, class Hash = std::hash<KeyType>>
@@ -147,8 +148,8 @@ public:
     }
 
 private:
-    // тот же insert, только с указанием места, private и без rehash() потому что нужен только для rehash()
-    void copy_insert(const element& element_to_insert, std::list<element>& place_to_insert) {
+    // тот же insert, только с указанием места, private, move() и без rehash() потому что нужен только для rehash()
+    void move_insert(element&& element_to_insert, std::list<element>& place_to_insert) {
         bucket& current_bucket = buckets[get_position(element_to_insert.first)];
         current_bucket.first = place_to_insert.insert(current_bucket.first, element_to_insert);
         if (current_bucket.second == place_to_insert.end()) {
@@ -162,7 +163,7 @@ private:
         sz = 0;
         buckets.assign(nsize, {moved_elements.end(), moved_elements.end()});
         for (element& current_element : elements) {
-            copy_insert(current_element, moved_elements);
+            move_insert(std::move(current_element), moved_elements);
         }
         swap(elements, moved_elements);
         // потому что при list::swap нет гарантий на end(), а все остальные итераторы сохранятся
