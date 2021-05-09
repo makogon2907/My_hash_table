@@ -116,41 +116,41 @@ public:
         elements.erase(iterator_to_erase);
     }
 
-    iterator find(const KeyType& key) {
+private:
+    // возвращает -1, если элемента нет, иначе его расстояние от начала bucket-а
+    int inside_find(const KeyType& key) const {
         bucket current_bucket = buckets[get_position(key)];
         if (current_bucket.first == end()) {
-            return end();
+            return -1;
         }
-        for (iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it) {
+        int distance = 0;
+        auto bucket_end = std::next(current_bucket.second);
+        for (const_iterator it = current_bucket.first; it != bucket_end; ++it, distance++) {
             if (it->first == key) {
-                return it;
+                return distance;
             }
         }
-        return end();
+        return -1;
+    }
+
+public:
+    iterator find(const KeyType& key) {
+        iterator start_bucket = buckets[get_position(key)].first;
+        int distance = inside_find(key);
+        return distance == -1 ? end() : std::next(start_bucket, distance);
     }
 
     const_iterator find(const KeyType& key) const {
-        bucket current_bucket = buckets[get_position(key)];
-        if (current_bucket.first == end()) {
-            return end();
-        }
-        for (const_iterator it = current_bucket.first; it != std::next(current_bucket.second); ++it) {
-            if (it->first == key) {
-                return it;
-            }
-        }
-        return end();
+        const_iterator start_bucket = buckets[get_position(key)].first;
+        int distance = inside_find(key);
+        return distance == -1 ? end() : std::next(start_bucket, distance);
     }
 
 private:
+    // тот же insert, только с указанием места, private и без rehash() потому что нужен только для rehash()
     void copy_insert(const element& element_to_insert, std::list<element>& place_to_insert) {
         bucket& current_bucket = buckets[get_position(element_to_insert.first)];
-
-        // вставляем вначало текущего "отрезка"
         current_bucket.first = place_to_insert.insert(current_bucket.first, element_to_insert);
-
-        // если этот bucket появился впервые, то нужно сдвинуть указатель с end(),
-        // т.к. границы хранятся включительно
         if (current_bucket.second == place_to_insert.end()) {
             current_bucket.second--;
         }
