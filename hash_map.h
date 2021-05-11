@@ -15,13 +15,19 @@ public:
     using const_iterator = typename std::list<element>::const_iterator;
 
 private:
-    using bucket = std::pair<iterator, iterator>;  // хранит итераторы на границы подотрезка элементов с одним хэшом, включительно
+    struct bucket {
+        iterator first;
+        iterator second;
+        bucket() = default;
+    };
 
-public:
+    // using bucket = std::pair<iterator, iterator>;  // хранит итераторы на границы подотрезка элементов с одним хэшом, включительно
+
     size_t get_position(const KeyType key) const {
         return hasher(key) % buckets.size();
     }
 
+public:
     HashMap(Hash hasher = Hash()) : hasher(hasher) {
         buckets.assign(kDefaultSize, {end(), end()});
     }
@@ -149,19 +155,19 @@ public:
 
 private:
     // тот же insert, только с указанием места, private, move() и без rehash() потому что нужен только для rehash()
-    void move_insert(element&& element_to_insert, std::list<element>& place_to_insert) {
+    void move_insert(element&& element_to_insert, std::list<element>& list_to_insert) {
         bucket& current_bucket = buckets[get_position(element_to_insert.first)];
-        current_bucket.first = place_to_insert.insert(current_bucket.first, element_to_insert);
-        if (current_bucket.second == place_to_insert.end()) {
+        current_bucket.first = list_to_insert.insert(current_bucket.first, element_to_insert);
+        if (current_bucket.second == list_to_insert.end()) {
             current_bucket.second--;
         }
         sz++;
     }
 
-    void produce_rehash(size_t nsize) {
+    void rehash_to_capacity(size_t new_capacity) {
         std::list<element> moved_elements;
         sz = 0;
-        buckets.assign(nsize, {moved_elements.end(), moved_elements.end()});
+        buckets.assign(new_capacity, {moved_elements.end(), moved_elements.end()});
         for (element& current_element : elements) {
             move_insert(std::move(current_element), moved_elements);
         }
@@ -177,15 +183,15 @@ private:
         }
     }
 
-public:
     void rehash() {
         if (sz > buckets.size()) {
-            produce_rehash(kIncreaseFactor * buckets.size());
+            rehash_to_capacity(kIncreaseFactor * buckets.size());
         } else if (2 * sz < buckets.size()) {
-            produce_rehash(kDecreaseFactor * buckets.size());
+            rehash_to_capacity(kDecreaseFactor * buckets.size());
         }
     }
 
+public:
     ValueType& operator[](const KeyType& key) {
         iterator pointer = find(key);
         if (pointer != end()) {
@@ -202,10 +208,10 @@ public:
         return pointer->second;
     }
 
-    void clear(size_t nsize = kDefaultSize) {
+    void clear(size_t new_size = kDefaultSize) {
         sz = 0;
         elements.clear();
-        buckets.assign(nsize, {end(), end()});
+        buckets.assign(new_size, {end(), end()});
     }
 
     // all variables
