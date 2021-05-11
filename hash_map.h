@@ -103,7 +103,7 @@ public:
         bucket& current_bucket = buckets[get_position(key)];
 
         if (current_bucket.first == current_bucket.second) {
-            // if there is only one element left, we shold delete this bucket by moving it's borders to the end()
+            // if there is only one element left, we shold delete this bucket by moving its' borders to the end()
             current_bucket.first = end();
             current_bucket.second = end();
         } else if (iterator_to_erase == current_bucket.first) {
