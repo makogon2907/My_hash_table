@@ -15,13 +15,7 @@ public:
     using const_iterator = typename std::list<element>::const_iterator;
 
 private:
-    struct bucket {
-        iterator first;
-        iterator second;
-        bucket() = default;
-    };
-
-    // using bucket = std::pair<iterator, iterator>;  // хранит итераторы на границы подотрезка элементов с одним хэшом, включительно
+    using bucket = std::pair<iterator, iterator>;  // stores the borders of a segment of elements with the same hash.
 
     size_t get_position(const KeyType key) const {
         return hasher(key) % buckets.size();
@@ -88,11 +82,11 @@ public:
 
         bucket& current_bucket = buckets[get_position(element_to_insert.first)];
 
-        // вставляем вначало текущего "отрезка"
+        // insert at the beginnning of the segment
         current_bucket.first = elements.insert(current_bucket.first, element_to_insert);
 
-        // если этот bucket появился впервые, то нужно сдвинуть указатель с end(),
-        // т.к. границы хранятся включительно
+        // if the bucket is new, we should take the right border out from the end() position
+        // because the borders are stored including the border elements
         if (current_bucket.second == end()) {
             current_bucket.second--;
         }
@@ -109,14 +103,14 @@ public:
         bucket& current_bucket = buckets[get_position(key)];
 
         if (current_bucket.first == current_bucket.second) {
-            // если остался только один элемент в корзинке, то указатели этой корзинки нужно сдвинуть в конец списка
+            // if there is only one element left, we shold delete this bucket by moving it's borders to the end()
             current_bucket.first = end();
             current_bucket.second = end();
         } else if (iterator_to_erase == current_bucket.first) {
-            // если удалился первый элемент, то сдвинуть начало подотрезка bucket-а
+            // if the first element in segment is deleted, we move the left border forward
             current_bucket.first++;
         } else if (iterator_to_erase == current_bucket.second) {
-            // eсли удалился последний, то тоже нужно сдвинуть границу
+            // if the last was deleted, move the right border
             current_bucket.second--;
         }
         sz--;
@@ -124,7 +118,7 @@ public:
     }
 
 private:
-    // возвращает -1, если элемента нет, иначе его расстояние от начала bucket-а
+    // returns -1, if there is no such element and distance from the left-bucket-border otherwise
     int inside_find(const KeyType& key) const {
         bucket current_bucket = buckets[get_position(key)];
         if (current_bucket.first == end()) {
@@ -154,7 +148,7 @@ public:
     }
 
 private:
-    // тот же insert, только с указанием места, private, move() и без rehash() потому что нужен только для rehash()
+    // the same insert function, but private, move() and without rehash() could be called only from rehash()
     void move_insert(element&& element_to_insert, std::list<element>& list_to_insert) {
         bucket& current_bucket = buckets[get_position(element_to_insert.first)];
         current_bucket.first = list_to_insert.insert(current_bucket.first, element_to_insert);
@@ -172,7 +166,7 @@ private:
             move_insert(std::move(current_element), moved_elements);
         }
         swap(elements, moved_elements);
-        // потому что при list::swap нет гарантий на end(), а все остальные итераторы сохранятся
+        // behaviour of "end()" iterator is unspecified, so the check is made manually
         for (auto& segment_pointers : buckets) {
             if (segment_pointers.first == moved_elements.end()) {
                 segment_pointers.first = elements.end();
