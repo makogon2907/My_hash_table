@@ -110,11 +110,12 @@ public:
             // if the first element in segment is deleted, we move the left border forward
             current_bucket.first++;
         } else if (iterator_to_erase == current_bucket.second) {
-            // if the last was deleted, move the right border
+            // if the last was de leted, move the right border
             current_bucket.second--;
         }
         sz--;
         elements.erase(iterator_to_erase);
+        rehash();
     }
 
 private:
